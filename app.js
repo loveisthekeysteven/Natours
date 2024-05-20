@@ -25,6 +25,12 @@ const bookingController = require('./controller/bookingController');
 const app = express();
 app.enable('trust proxy');
 
+// Determine if the app is running behind a proxy
+const isBehindProxy = process.env.NODE_ENV === 'production';
+
+// Configure trust proxy based on the environment
+app.set('trust proxy', isBehindProxy ? 1 : false);
+
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -48,11 +54,21 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Limit requests from same API
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMs: 60 * 60 * 1000,
+//   message: 'Too many requests from this IP, please try again in an hour!',
+// });
+
 const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in an hour!',
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  handler: (req, res) => {
+    res.status(429).send('Too many requests, please try again later.');
+  },
+  trustProxy: isBehindProxy, // Ensure this is set correctly
 });
+
 app.use('/api', limiter);
 
 // Stripe Webhook
