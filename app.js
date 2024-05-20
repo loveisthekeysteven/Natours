@@ -9,6 +9,7 @@ const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorController');
@@ -57,7 +58,7 @@ app.use('/api', limiter);
 // Stripe Webhook
 app.post(
   '/webhook-checkout',
-  express.raw({
+  bodyParser.raw({
     type: 'application/json',
   }),
   bookingController.webhookCheckout
